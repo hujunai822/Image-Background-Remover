@@ -1,0 +1,7 @@
+name = "image-background-remover-worker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+# REMOVE_BG_API_KEY is set as a secret via:
+# wrangler secret put REMOVE_BG_API_KEY

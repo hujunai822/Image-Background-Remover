@@ -1,19 +1,18 @@
-# Python
+# Python / old backend
 __pycache__/
 *.py[cod]
-*.egg-info/
 .venv/
 venv/
-dist/
-.env
 
 # Node
 node_modules/
 frontend/dist/
 frontend/.env
+frontend/.env.local
 
-# rembg model cache
-.u2net/
+# Cloudflare
+worker/.wrangler/
+worker/node_modules/
 
 # OS
 .DS_Store

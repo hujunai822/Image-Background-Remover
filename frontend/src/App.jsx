@@ -1,34 +1,117 @@
 import { useState } from 'react'
 import Uploader from './components/Uploader'
-import ResultView from './components/ResultView'
+import CompareSlider from './components/CompareSlider'
+import Header from './components/Header'
+import Footer from './components/Footer'
 
 export default function App() {
-  const [result, setResult] = useState(null)
+  const [lang, setLang] = useState('en')
+  const [originalUrl, setOriginalUrl] = useState(null)
+  const [resultUrl, setResultUrl] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  const t = translations[lang]
+
+  const handleReset = () => {
+    setOriginalUrl(null)
+    setResultUrl(null)
+    setError(null)
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">Image Background Remover</h1>
-      <p className="text-gray-500 mb-8">Upload an image and we'll remove the background instantly.</p>
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header lang={lang} onLangChange={setLang} t={t} />
 
-      <Uploader
-        onResult={setResult}
-        onLoading={setLoading}
-        onError={setError}
-      />
+      <main className="flex-1 flex flex-col items-center px-4 py-12">
+        {/* Hero */}
+        <div className="text-center mb-10 max-w-2xl">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+            {t.heroTitle}
+          </h1>
+          <p className="text-lg text-gray-500">{t.heroSubtitle}</p>
+        </div>
 
-      {error && (
-        <p className="mt-4 text-red-500 text-sm">{error}</p>
-      )}
+        {/* Upload / Result Area */}
+        {!resultUrl && (
+          <Uploader
+            lang={lang}
+            t={t}
+            loading={loading}
+            onOriginal={setOriginalUrl}
+            onResult={setResultUrl}
+            onLoading={setLoading}
+            onError={setError}
+          />
+        )}
 
-      {loading && (
-        <p className="mt-6 text-blue-500 animate-pulse">Processing image...</p>
-      )}
+        {error && (
+          <div className="mt-4 flex items-center gap-3 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <span>⚠️</span>
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="ml-2 text-red-400 hover:text-red-600 font-medium"
+            >
+              {t.retry}
+            </button>
+          </div>
+        )}
 
-      {result && !loading && (
-        <ResultView imageUrl={result} />
-      )}
+        {resultUrl && originalUrl && (
+          <div className="w-full max-w-3xl mt-4 flex flex-col items-center gap-6">
+            <CompareSlider originalUrl={originalUrl} resultUrl={resultUrl} />
+            <div className="flex gap-4">
+              <a
+                href={resultUrl}
+                download="background-removed.png"
+                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl hover:opacity-90 transition shadow-lg"
+              >
+                ⬇️ {t.download}
+              </a>
+              <button
+                onClick={handleReset}
+                className="px-8 py-3 border border-gray-300 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition"
+              >
+                🔄 {t.uploadAnother}
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <Footer t={t} />
     </div>
   )
+}
+
+const translations = {
+  en: {
+    heroTitle: 'Remove Image Background\nInstantly with AI',
+    heroSubtitle: 'Upload an image and get a clean transparent PNG in seconds. Free, no signup required.',
+    uploadPrompt: 'Drag & drop or click to upload',
+    uploadHint: 'Supports JPG, PNG, WEBP · Max 12MB',
+    processing: 'Removing background…',
+    download: 'Download PNG',
+    uploadAnother: 'Upload Another',
+    retry: 'Retry',
+    errorFormat: 'Please upload a JPG, PNG or WEBP image.',
+    errorSize: 'File too large. Maximum size is 12MB.',
+    errorApi: 'Processing failed. Please try again.',
+    navLogo: 'BGRemover',
+  },
+  zh: {
+    heroTitle: 'AI 一键去除图片背景',
+    heroSubtitle: '上传图片，秒级生成透明 PNG。免费，无需注册。',
+    uploadPrompt: '拖拽或点击上传图片',
+    uploadHint: '支持 JPG、PNG、WEBP · 最大 12MB',
+    processing: '正在处理中…',
+    download: '下载 PNG',
+    uploadAnother: '重新上传',
+    retry: '重试',
+    errorFormat: '请上传 JPG、PNG 或 WEBP 格式的图片。',
+    errorSize: '文件过大，最大支持 12MB。',
+    errorApi: '处理失败，请稍后重试。',
+    navLogo: 'AI 抠图',
+  },
 }
