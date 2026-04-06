@@ -16,7 +16,10 @@ export async function onRequestPost({ request, env }) {
   }
 
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-  if (!allowedTypes.includes(file.type)) {
+  // file.type may be empty in Pages runtime — fall back to jpeg
+  const mimeType = file.type && allowedTypes.includes(file.type) ? file.type : null
+
+  if (file.type && !allowedTypes.includes(file.type)) {
     return Response.json(
       { error: 'Unsupported file type. Please upload JPG, PNG or WEBP.' },
       { status: 400, headers: corsHeaders }
@@ -32,8 +35,17 @@ export async function onRequestPost({ request, env }) {
     )
   }
 
+  // Check API key
+  if (!env.REMOVE_BG_API_KEY) {
+    return Response.json({ error: 'Server misconfiguration: missing API key' }, { status: 500, headers: corsHeaders })
+  }
+
+  // Build multipart body manually to ensure correct Content-Type on file part
+  const effectiveMime = mimeType || 'image/jpeg'
+  const filename = (file.name && file.name !== 'blob') ? file.name : `image.${effectiveMime.split('/')[1]}`
+
   const removeBgForm = new FormData()
-  removeBgForm.append('image_file', new Blob([buffer], { type: file.type }), file.name || 'image')
+  removeBgForm.append('image_file', new File([buffer], filename, { type: effectiveMime }))
   removeBgForm.append('size', 'auto')
 
   let removeBgRes
