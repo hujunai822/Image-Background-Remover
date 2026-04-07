@@ -15,17 +15,6 @@ export async function onRequestPost({ request, env }) {
     return Response.json({ error: 'No image_file field found' }, { status: 400, headers: corsHeaders })
   }
 
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-  // file.type may be empty in Pages runtime — fall back to jpeg
-  const mimeType = file.type && allowedTypes.includes(file.type) ? file.type : null
-
-  if (file.type && !allowedTypes.includes(file.type)) {
-    return Response.json(
-      { error: 'Unsupported file type. Please upload JPG, PNG or WEBP.' },
-      { status: 400, headers: corsHeaders }
-    )
-  }
-
   const MAX_SIZE = 12 * 1024 * 1024
   const buffer = await file.arrayBuffer()
   if (buffer.byteLength > MAX_SIZE) {
@@ -35,14 +24,33 @@ export async function onRequestPost({ request, env }) {
     )
   }
 
+  // 通过文件头魔数检测真实格式，避免 Pages 运行时 file.type 为空的问题
+  function detectMime(buf) {
+    const bytes = new Uint8Array(buf.slice(0, 12))
+    if (bytes[0] === 0xFF && bytes[1] === 0xD8) return 'image/jpeg'
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) return 'image/png'
+    if (bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) return 'image/webp'
+    return null
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+  const detectedMime = detectMime(buffer)
+  const effectiveMime = detectedMime || (file.type && allowedTypes.includes(file.type) ? file.type : null)
+
+  if (!effectiveMime) {
+    return Response.json(
+      { error: 'Unsupported file type. Please upload JPG, PNG or WEBP.' },
+      { status: 400, headers: corsHeaders }
+    )
+  }
+
   // Check API key
   if (!env.REMOVE_BG_API_KEY) {
     return Response.json({ error: 'Server misconfiguration: missing API key' }, { status: 500, headers: corsHeaders })
   }
 
-  // Build multipart body manually to ensure correct Content-Type on file part
-  const effectiveMime = mimeType || 'image/jpeg'
-  const filename = (file.name && file.name !== 'blob') ? file.name : `image.${effectiveMime.split('/')[1]}`
+  const ext = effectiveMime.split('/')[1]
+  const filename = (file.name && file.name !== 'blob') ? file.name : `image.${ext}`
 
   const removeBgForm = new FormData()
   removeBgForm.append('image_file', new File([buffer], filename, { type: effectiveMime }))
