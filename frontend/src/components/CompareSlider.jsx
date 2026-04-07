@@ -1,9 +1,19 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 
 export default function CompareSlider({ originalUrl, resultUrl }) {
-  const [sliderPos, setSliderPos] = useState(50) // percentage
+  const [sliderPos, setSliderPos] = useState(50)
   const containerRef = useRef(null)
   const dragging = useRef(false)
+  const [aspectRatio, setAspectRatio] = useState('4/3')
+
+  // 自动检测图片真实比例，让容器完全贴合图片
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => {
+      setAspectRatio(`${img.naturalWidth}/${img.naturalHeight}`)
+    }
+    img.src = originalUrl
+  }, [originalUrl])
 
   const updateSlider = useCallback((clientX) => {
     const rect = containerRef.current.getBoundingClientRect()
@@ -32,23 +42,22 @@ export default function CompareSlider({ originalUrl, resultUrl }) {
     <div
       ref={containerRef}
       className="relative w-full max-w-3xl rounded-2xl overflow-hidden shadow-xl cursor-col-resize select-none"
-      style={{ aspectRatio: '4/3' }}
+      style={{ aspectRatio }}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
       onTouchMove={onTouchMove}
     >
-      {/* Result image (right side, checkerboard background) */}
+      {/* Result image - checkerboard background */}
       <div className="absolute inset-0 checkerboard">
         <img
           src={resultUrl}
           alt="Background removed"
-          className="w-full h-full object-contain"
-          style={{ objectPosition: 'left center' }}
+          className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Original image (left side, clipped) */}
+      {/* Original image - clipped to left */}
       <div
         className="absolute inset-0 overflow-hidden"
         style={{ width: `${sliderPos}%` }}
@@ -56,8 +65,8 @@ export default function CompareSlider({ originalUrl, resultUrl }) {
         <img
           src={originalUrl}
           alt="Original"
-          className="absolute inset-0 w-full h-full object-contain"
-          style={{ width: containerRef.current?.clientWidth || '100%' , objectPosition: 'left center'}}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ width: containerRef.current?.clientWidth || '100%' }}
         />
       </div>
 
@@ -68,7 +77,6 @@ export default function CompareSlider({ originalUrl, resultUrl }) {
         onMouseDown={onMouseDown}
         onTouchStart={(e) => updateSlider(e.touches[0].clientX)}
       >
-        {/* Handle circle */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-xl flex items-center justify-center">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M5 4l-3 4 3 4M11 4l3 4-3 4" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
