@@ -44,6 +44,7 @@ export default function CompareSlider({ originalUrl, resultUrl }) {
           src={resultUrl}
           alt="Background removed"
           className="w-full h-full object-contain"
+          style={{ objectPosition: 'left center' }}
         />
       </div>
 
@@ -56,7 +57,7 @@ export default function CompareSlider({ originalUrl, resultUrl }) {
           src={originalUrl}
           alt="Original"
           className="absolute inset-0 w-full h-full object-contain"
-          style={{ width: containerRef.current?.clientWidth || '100%' }}
+          style={{ width: containerRef.current?.clientWidth || '100%' , objectPosition: 'left center'}}
         />
       </div>
 
