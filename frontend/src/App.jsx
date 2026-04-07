@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import Uploader from './components/Uploader'
-import CompareSlider from './components/CompareSlider'
 import Header from './components/Header'
 import Footer from './components/Footer'
 
@@ -59,9 +58,27 @@ export default function App() {
         )}
 
         {resultUrl && originalUrl && (
-          <div className="w-full max-w-3xl mt-4 flex flex-col items-center gap-6">
-            <CompareSlider originalUrl={originalUrl} resultUrl={resultUrl} />
-            <div className="flex gap-4">
+  <div className="w-full max-w-4xl mt-4 flex flex-col items-center gap-6">
+    <div className="w-full grid grid-cols-2 gap-4">
+      {/* 原图 */}
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-sm font-medium text-gray-500">原图</span>
+        <div className="w-full rounded-xl overflow-hidden border border-gray-200 shadow">
+          <img src={originalUrl} alt="Original" className="w-full h-auto object-contain" />
+        </div>
+      </div>
+      {/* 去背景图 */}
+      <div className="flex flex-col items-center gap-2">
+        <span className="text-sm font-medium text-gray-500">去背景</span>
+        <div
+          className="w-full rounded-xl overflow-hidden border border-gray-200 shadow"
+          style={{ background: 'repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%) 0 0 / 16px 16px' }}
+        >
+          <img src={resultUrl} alt="Background removed" className="w-full h-auto object-contain" />
+        </div>
+      </div>
+    </div>
+    <div className="flex gap-4">
               <a
                 href={resultUrl}
                 download="background-removed.png"
